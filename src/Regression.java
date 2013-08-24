@@ -5,6 +5,7 @@ public class Regression {
 
 	/**
 	 * @param args
+	 * 2013.AUG.23 - Class now calculates both exponential and linear regression
 	 */
 	public static void main(String[] args) {
 		// define data sets
@@ -35,17 +36,22 @@ public class Regression {
 		// constant e:
 		Double e = Math.E;
 		
-		// source: http://www.matrixlab-examples.com/exponential-regression.html
-		// f(x) = ae^(bx)
+		// sample data & equations 
+		// sourced from: http://www.matrixlab-examples.com/exponential-regression.html
+		// f(x) = ae^(bx) for exponential
+		// f(x) = a + bx for linear
 		
 		// Find sum of squares:
-		// Calculate sum(X) & sum(X^2) & sum(Y) & sum(X*Y)
-		// NOTE: Y denotes log(Y) for each case
+		// Calculate sum(X) & sum(X^2) & sum(Y) & sum(Y^2) & sum(X*Y)
+		// NOTE: Y denotes log(Y) for each case when calculating exponential regression
 		Double sumX = 0.00;
 		Double sumX2 = 0.00;
 		Double sumY = 0.00;
+		Double sumYlin = 0.00;
 		Double sumY2 = 0.00;
+		Double sumY2lin = 0.00;
 		Double sumXY = 0.00;
+		Double sumXYlin = 0.00;
 		
 		for(int i=0;i<N;i++)
 		{
@@ -55,51 +61,103 @@ public class Regression {
 		
 		for(int j=0;j<N;j++)
 		{
+			// exponential
 			sumY = sumY + Math.log(energy.get(j));
 			sumY2 = sumY2 + Math.pow(Math.log(energy.get(j)), 2);
+			
+			// linear
+			sumYlin = sumYlin + energy.get(j);
+			sumY2lin = sumY2lin + Math.pow(energy.get(j),2);
 		}
 		
 		for(int k=0;k<N;k++)
 		{
+			// exponential
 			sumXY = sumXY + (oat.get(k)*(Math.log(energy.get(k))));
+		
+			// linear
+			sumXYlin = sumXYlin + oat.get(k)*energy.get(k);
 		}
 
 		// Calculate regression coefficient 'b'
-		Double b = 0.00;
-		b = ((N*sumXY) - (sumX*sumY))/(N*sumX2 - (sumX*sumX));
+			// exponential
+			Double b = 0.00;
+			b = ((N*sumXY) - (sumX*sumY))/(N*sumX2 - (sumX*sumX));
+			
+			// linear
+			Double bLin = 0.00;
+			bLin = ((N*sumXYlin) - (sumX*sumYlin))/(N*sumX2 - (sumX*sumX));
 		
 		// Calculate regression coefficient 'a'
-		Double a = 0.00;
-		a = Math.pow(e, (sumY - (b*sumX))/N);
+			// exponential
+			Double a = 0.00;
+			a = Math.pow(e, (sumY - (b*sumX))/N);
+			
+			// linear
+			Double aLin = 0.00;
+			aLin = (sumYlin*sumX2 - sumX*sumXYlin)/(N*sumX2 - sumX*sumX);
 		
 		// Calculate coefficient of determination (R^2)
-		Double c = 0.00;	// numerator
-		Double d = 0.00;	// denominator
-		Double r = 0.00;	// coefficient of determination
-		c = (b)*(sumXY - sumX*sumY/N);
-		d = sumY2 - (sumY*sumY)/N;
-		r = c/d;
+			// exponential
+			Double c = 0.00;	// numerator
+			Double d = 0.00;	// denominator
+			Double r = 0.00;	// coefficient of determination
+			c = (b)*(sumXY - sumX*sumY/N);
+			d = sumY2 - (sumY*sumY)/N;
+			r = c/d;
+			
+			// linear
+			Double cLin = 0.00;	// numerator
+			Double dLin = 0.00;	// denominator
+			Double rLin = 0.00;	// coefficient of determination
+			cLin = (bLin)*(sumXYlin - sumX*sumYlin/N);
+			dLin = sumY2lin - (sumYlin*sumYlin)/N;
+			rLin = cLin/dLin;
 		
 		// Calculate coefficient of correlation
-		Double p = 0.00;
-		if(r > 0){
-			p = Math.sqrt(r);
-		} else {
-			p = 0.00;
-		}
+			// exponential
+			Double p = 0.00;
+			if(r > 0){
+				p = Math.sqrt(r);
+			} else {
+				p = 0.00;
+			}
+			
+			// linear
+			Double pLin = 0.00;
+			if(rLin > 0){
+				pLin = Math.sqrt(rLin);
+			} else {
+				pLin = 0.00;
+			}
 
 		// Calculate standard error
 		// equals (total variance - y variance)/(n-2)
-		Double std_err = 0.00;
-		std_err = Math.sqrt((d-c)/(N-2));
+			// exponential
+			Double std_err = 0.00;
+			std_err = Math.sqrt((d-c)/(N-2));
+			
+			// linear
+			Double std_errLin = 0.00;
+			std_errLin = Math.sqrt((dLin-cLin)/(N-2));
 		
 		// print the model
-		System.out.println("Regression model for n equals " + N + ":");
-		System.out.println("y = " + a + "*(e^(" + b + "*x))");
-		
-		System.out.println("R-square value equals " + r);
-		System.out.println("Correlation equals " + p);
-		System.out.println("Standard Error equals " + std_err);
+			// exponential
+			System.out.println("Exponential regression model for n equals " + N + ":");
+			System.out.println("y = " + a + "*(e^(" + b + "*x))");
+			
+			System.out.println("R-square value equals " + r);
+			System.out.println("Correlation equals " + p);
+			System.out.println("Standard Error equals " + std_err);
+			System.out.println("");
+			
+			// linear
+			System.out.println("Linear regression model for n equals " + N + ":");
+			System.out.println("y = " + bLin + "x + " + aLin);
+			
+			System.out.println("R-square value equals " + rLin);
+			System.out.println("Correlation equals " + pLin);
+			System.out.println("Standard Error equals " + std_errLin);
 		
 	}
 	
